@@ -1,0 +1,9 @@
+autoscan
+mv configure.scan configure.ac
+autoconf
+mv Makefile Makefile.in
+./configure
+make clean all
+./memcheck
+autoheader
+./configure
