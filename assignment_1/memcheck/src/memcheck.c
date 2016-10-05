@@ -1,8 +1,14 @@
+#include "config.h"
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
+
 #include <stdio.h>
 #include <unistd.h>
 #include <getopt.h>
+#ifdef HAVE_STRING_H
 #include <string.h>
+#endif
 
 void memcheck_execution();
 void print_autor();
@@ -22,7 +28,7 @@ int main (int argc, char** argv){
 		{0,0,0,0}
 	};
   
-	while ((c = getopt_long(argc, argv, "ha:p:",lopts,&optionIdx)) != -1) {
+	while ((c = getopt_long(argc, argv, "hap:",lopts,&optionIdx)) != -1) {
 //	while ((c = getopt (argc, argv, "hpa:")) != -1){
 		switch (c) {
 			case 'a':
@@ -31,7 +37,11 @@ int main (int argc, char** argv){
 			case 'p':
 				cvalue = optarg;
 				printf("The argument received is %s\n",cvalue);
-				memcheck_execution(cvalue);				
+#ifdef HAVE_WORKING_FORK
+				memcheck_execution(cvalue);
+#else
+				printf("-Info-  No process to execute\n");
+#endif				
 				break;
 			
 			case 'h':
@@ -42,14 +52,20 @@ int main (int argc, char** argv){
 				printf("Option '-%i' not recognized.\n",c);
 			}
 	}
-
 	return 0;
 }
 
+void error_and_die(const char *msg)
+{
+    perror(msg);
+    exit(EXIT_FAILURE);
+}
+
 void memcheck_execution(char* program){
-	printf("Ejecutar el programa\n");
+	printf("Ejecutando el programa....\n");
 	int pid;
-	char* preload_path = "LD_PRELOAD=./libmemcheck.so ";
+	int status;
+	char* preload_path = "LD_PRELOAD=../lib/.libs/libmemcheck.so ";
 	char* cmd_line;
 
 	cmd_line = malloc(strlen(preload_path)+1+4);	
@@ -58,28 +74,28 @@ void memcheck_execution(char* program){
 	
 	printf("Cmd line is %s\n\n", cmd_line);
 	pid = fork();
-	printf("Pid %i\n", pid);
+//	printf("Pid %i\n", pid);
 	if (pid == 0)
 	{   // in child 
 		// set up arguments //
 		// launch here
-		printf("Running ls command \n");
+//		printf("Running ls command \n");
 		int result = execl("/bin/sh", "/bin/sh", "-c",cmd_line,0);
-
-//		int result = execl("/bin/sh", "/bin/sh", "-c","LD_PRELOAD=./libmemcheck.so ./mem.so",0);
-		printf("After execute execl\n");
-		printf("Execk return %i\n",result);
-		free(cmd_line);
-		exit(0);
-	}
+		}
 	else if (pid < 0)
 	{   // handle error
+	}else{
+		if (waitpid (pid, &status, 0) == pid){
+			printf("Test execution done\n");
+			exit(0);		
+		}
 	}
 
+
+			
 
 	exit(0);
 }
-
 void print_autor(){
 	printf("###########################################\n");
 	printf("#               Memcheck tool             #\n");
