@@ -11,7 +11,7 @@ dlname='libmemcheck.so.0'
 library_names='libmemcheck.so.0.0.0 libmemcheck.so.0 libmemcheck.so'
 
 # The name of the static archive.
-old_library=''
+old_library='libmemcheck.a'
 
 # Linker flags that cannot go in dependency_libs.
 inherited_linker_flags=''

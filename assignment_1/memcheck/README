@@ -1,0 +1,26 @@
+#########################################
+#  Instituto Tecnologico de Costa Rica  #
+#  Assigment 1                          #
+#  Autor: Marco Espinoza Murillo        #      
+#  Carne: 200418646                     #
+#########################################
+
+#1. To generate all the required to execute the application run the following:
+source cmd_automake
+#it will generate all the required files to compile the application
+
+#2. To compile the program use:
+make
+make install
+
+#3. To clean use:
+make clean
+
+#4. To run the program execute the following:
+./src/memcheck -p leaky
+./src/memcheck -p buggy
+
+#5. To see the help related with the program, execute:
+./src/memcheck -h
+
+
