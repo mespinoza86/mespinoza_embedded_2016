@@ -28,8 +28,10 @@ int main (int argc, char** argv){
 		{0,0,0,0}
 	};
   
-	while ((c = getopt_long(argc, argv, "hap:",lopts,&optionIdx)) != -1) {
+//	while ((c = getopt_long(argc, argv, "hap:",lopts,&optionIdx)) != -1) {
 //	while ((c = getopt (argc, argv, "hpa:")) != -1){
+
+	while ((c = getopt (argc, argv, "hap:")) != -1){
 		switch (c) {
 			case 'a':
 				print_autor();
@@ -48,6 +50,14 @@ int main (int argc, char** argv){
 				print_help();
 				break;
 
+			case '?':
+				if (optopt == 'c')
+					fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+				else if (isprint (optopt))
+					fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+				else
+					fprintf (stderr, "Unknown option character `\\x%x'.\n", optopt);
+				        return 1;
 			default:
 				printf("Option '-%i' not recognized.\n",c);
 			}

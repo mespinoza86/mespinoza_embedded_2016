@@ -16,11 +16,11 @@ make install
 #3. To clean use:
 make clean
 
-#4. To run the program execute the following:
-./src/memcheck -p leaky
-./src/memcheck -p buggy
+#4. To run the program, you need go to the src folder and execute the following:
+./memcheck -p leaky
+./memcheck -p buggy
 
 #5. To see the help related with the program, execute:
-./src/memcheck -h
+./memcheck -h
 
 
