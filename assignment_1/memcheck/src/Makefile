@@ -174,8 +174,7 @@ am__define_uniq_tagged_files = \
   done | $(am__uniquify_input)`
 ETAGS = etags
 CTAGS = ctags
-am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/depcomp \
-	install-sh
+am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/depcomp
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = ${SHELL} /home/mespinoz/Documents/Maestria/Cuatri_3/Sistemas_Empotrados/tarea1/assignment_1/assignment_1/memcheck/missing aclocal-1.15
 AMTAR = $${TAR-tar}
