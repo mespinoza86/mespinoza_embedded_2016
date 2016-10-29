@@ -27,10 +27,11 @@ struct file_read *_fp;
 //Declaring methods which will be used during the program execution
 void run_target(const char* programname);
 void run_debugger(pid_t child_pid, int _step_mode, int _check_var, int _glob_var);
-void procmsg(const char* format, ...);
 void run_nm(const char* programname);
 void read_var (const char* global_var_read);
 unsigned int check_var_addr(char* s_var_addr);
+void print_autor();
+void print_help();
 
 //Main method
 //This is the method in charge to execute the program
@@ -39,7 +40,7 @@ unsigned int check_var_addr(char* s_var_addr);
 int main(int argc, char** argv)
 {
 
-//Variable declaration
+//Variable declaration required for the program execution
 	char* program = NULL;
 	int bin_file=0;
 	int step_mode=0;
@@ -47,7 +48,8 @@ int main(int argc, char** argv)
 	char* s_var_addr = NULL;
 	unsigned int var_addr;
 	int c;
-
+	pid_t child_pid, nm_pid;
+	int status;
 	opterr = 0;
 
 //This while is used to read the arguments added to through the command line to the application
@@ -60,7 +62,7 @@ and set the proper variables in order to execute the required methods
 		switch (c) {
 			case 'a':
 			//'a' means the autor information will be printed
-			//	print_autor();
+				print_autor();
 				break;
 			case 'b':
 			//'b' It will have the path for the binary file to be executed
@@ -69,12 +71,11 @@ and set the proper variables in order to execute the required methods
 				break;			
 			case 'h':
 			//'h' is used to print the help menu
-			//	print_help();
+				print_help();
 				break;
 			case 'w':
-			//'w' has the address which will be monitored during the test execution
+			//'w' has the global variable name which will be monitored during the test execution
 				s_var_addr = optarg;
-			//	sscanf(s_var_addr,"%08x",&var_addr);
 				check_var=1;
 				break;
 			case 's':
@@ -98,8 +99,8 @@ and set the proper variables in order to execute the required methods
 	/*
 	-b argument is required for the program to execute the binary file
 	If the argument is not added, the program will fail due to there is not a file to run
-	The following if will check if this argument was added in the command line, and if the 
-	argument was not added, the program will fail.	
+	The following "if" will check if this argument was added in the command line,  
+	in case the argument was not added, the program will fail.	
 	*/
 
 	if(!bin_file){
@@ -109,29 +110,34 @@ and set the proper variables in order to execute the required methods
 		fprintf(stderr, "-Info- Program %s will be executed with the debugger\n", program);
 	}
 
-
 	/*
-	The following fork is used to execute the binary file through the debugger
-	*/
-//	run_nm(program);
-
-	pid_t child_pid, nm_pid;
-	int status;
-
-	/*
-	-w argument is optional, it will have the address for the global var which will be 
+	-w argument is optional, it will have the global var name which will be 
 	monitored during the binary execution.
-	The following if is used to print if a global var will be checked in this execution
+	The following "if" is used to check if a variable will be monitored during the program
+	execution.
+	In case the user added a variable to be monitored, the program will get the address related 
+	with this variable. 
 	*/
 
 	if(check_var){
+		/*
+		There is a variable to be monitored, a fork is used due to the nm program execution 
+		is required in order get the address belonging to the variable name added
+		*/
+			
 		nm_pid = fork();
 		if(nm_pid == 0){
+			//run_nm method is used to execute the "nm" program
 			run_nm(program);
 		}else{
-			//With this if we are pretty sure the process related with nm is already finished
+			//With this "if" we are pretty sure the process related with nm is already finished
 			if (waitpid (nm_pid, &status, 0) == nm_pid){	
+				/*
+				The nm execution was stored in the file temp_var, this file will be read with the method read_var
+				It will store in a linked list the file to get the required from it. 
+				*/								
 				read_var("temp_var");
+				//var_addr is used to get the address value belonging to the variable added through the switch -w
 				var_addr = check_var_addr(s_var_addr);
 				printf("-Info- Address to monitor during execution is: 0x%08x\n", var_addr);
 			}
@@ -165,35 +171,27 @@ and set the proper variables in order to execute the required methods
 }
 
 /*
- As you can see in the example, a process forks a child and the child executes the process we want to trace. Before running exec, the child calls ptrace with the first argument, equal to PTRACE_TRACEME. This tells the kernel that the process is being traced, and when the child executes the execve system call, it hands over control to its parent. The parent waits for notification from the kernel with a wait() call. Then the parent can check the arguments of the system call or do other things, such as looking into the registers.
-
-When the system call occurs, the kernel saves the original contents of the eax register, which contains the system call number. We can read this value from child's USER segment by calling ptrace with the first argument PTRACE_PEEKUSER, shown as above.
-
+read_var method gets as argument the name of the file to be open
+The method will store the file in a linked list
+Reason to use the linked list is to reserve only the the memory required by the file
 */
-
-void procmsg(const char* format, ...)
-{
-    va_list ap;
-    fprintf(stdout, "[%d] ", getpid());
-    va_start(ap, format);
-    vfprintf(stdout, format, ap);
-    va_end(ap);
-}
-
 void read_var (const char* global_var_read){
+	//Variable required by the method
 	FILE *fp;
-	int cont=0;
- 	
+	int cont=0; 	
 	struct file_read *aux;	
 
-	_fp = malloc( sizeof(struct file_read) );  
-	aux = _fp;
+	_fp = malloc( sizeof(struct file_read) );  //storing the memory required for the structure _fp
+	aux = _fp;                                 //aux is a pointer used to store each line belonging to the file
  
-	fp = fopen("temp_var","r");
+	fp = fopen(global_var_read,"r");          //Reading the file name stored in the var global_var_read
 
+	/*
+	This "while" will read each line from the file, and it will store this line in the linked list
+	*/
+	
 	while (fscanf(fp, "%s",aux->addr) != EOF) {
 		aux->index=cont;
-//		printf("Data read addr %s\n", aux->addr);
 		aux->next = malloc( sizeof(struct file_read) ); 
 		aux = aux->next;
 		memset(aux->addr, 0, sizeof(aux->addr));
@@ -201,12 +199,29 @@ void read_var (const char* global_var_read){
 	}
 }
 
+/*
+Due to the file was stored in a linked list, the following method will get as argument the variable added through the command line
+And it will check if the variable is stored in the progrm to be executed
+In case the var exists, the method will get the address belonging to the var name, and will return this value
+It will be used during the program execution to identify the variable changes
+*/
+
 unsigned int check_var_addr(char* s_var_addr){
+	//Variables required by the program 
 	struct file_read *aux;	
 	aux = _fp;
 	char* str_in_prog;
 	int id = -1;
 	unsigned int _value;
+
+	/*
+	The following while will run the linked list item by item comparing each variable name
+	available in the program with the variable name added by the user
+	In case the variable is not present in the program, the program execution will finish,
+	in the opposite case, the ID will be stored, because in the file stored, we know the address
+	for the variable will be stored 2 items before of the actual item
+	From this index it is possible gets the address related with the variable added by the user
+	*/
 
 	while(aux->next != NULL){
 		str_in_prog = aux->addr;
@@ -215,7 +230,13 @@ unsigned int check_var_addr(char* s_var_addr){
 		}
 		aux = aux->next;
 	}
-
+	
+	/*
+	The following if is used to check if the variable name is in the program to be debugged
+	If the variable exists, the program will run again the linked list to identify the index related with the 
+	address value for the variable added by the user
+	If the value is identified, this value is returned by the method to check the address during the debugger execution 
+	*/
 	if(id != -1){	
 		aux = _fp;
 		while(aux->next != NULL){
@@ -231,11 +252,17 @@ unsigned int check_var_addr(char* s_var_addr){
 		exit(0);
 	}
 	
-	printf("-I- The variable %s is matching the address %16x\n",s_var_addr, _value);
+	printf("-Info- The variable %s is matching the address %16x\n",s_var_addr, _value);
 	return _value; 
 	
 }
 
+/*
+The following method just execute the program through NM
+NM is used to get all the variables presents in the program 
+It will allow us to know if the variable added by the user 
+with the option -w is present or not in the program to be debugged 
+*/
 void run_nm(const char* programname){
 	char* nm_lit = "nm ";
 	char* nm_exec;
@@ -245,12 +272,17 @@ void run_nm(const char* programname){
 	strcat(nm_exec, programname);
 	strcat(nm_exec, " > temp_var");
 
-	procmsg("Executing nm script....\n", programname);
-
+	printf("Executing nm script....\n");
 	execl("/bin/sh", "/bin/sh","-c",nm_exec,0);
 
 	
 }
+
+/*
+run_target method is used to execute PTRACE_TRACEME
+This is used to tell the kernel that the process received as argument is being traced.
+At the moment the system call occurs, the kernel saves the original contenst of the eax register, because it contains the system call number.
+*/
 
 void run_target(const char* programname)
 {
@@ -265,41 +297,57 @@ void run_target(const char* programname)
 	execl(programname, programname, 0);
 }
 
-
-
+/*
+run_debugger is the method in charge to get all the required to know the IP executed by the program
+Also, in case a variable is being monitored, this method will check those changes and it will notify 
+in console about the old value and new value for this variable
+*/
 
 void run_debugger(pid_t child_pid, int _step_mode, int _check_var, int _glob_var)
 {
-
+	//variables required in the method
 	int wait_status;
-	long new_val=0;
-	long old_val=0;
+	unsigned int new_val=0;
+	unsigned int old_val=0;
+	unsigned int icounter = 0;
+	printf("-Info- Debugger started\n");
 
-	unsigned icounter = 0;
-	procmsg("debugger started\n");
 
 	// Wait for child to stop on its first instruction 
 	wait(&wait_status);
 
+	/*
+	WIFSTOPPED will return true if the child process was stopped
+	In this case, it is possible because the child is being traced through ptrace
+	It allow us to get all the required from the child process while it is stopped
+	*/ 		
+
 	while (WIFSTOPPED(wait_status)) {
-		icounter++;
-		struct user_regs_struct regs;
-		ptrace(PTRACE_GETREGS, child_pid, 0, &regs);
-		unsigned instr = ptrace(PTRACE_PEEKTEXT, child_pid, regs.rip, 0);
-	       // procmsg("icounter = %u.  EIP = 0x%08x.  instr = 0x%08x\n", icounter, regs.rip, instr);
-		procmsg("PC = 0x%08x.  instr = 0x%08x\n", regs.rip, instr);
+		icounter++; //Will have the number of instructions executed
+		struct user_regs_struct regs; //Used to get the registers values
+
+		ptrace(PTRACE_GETREGS, child_pid, 0, &regs); //PTRACE_GETREGS is used to get the registers values from the core
+		unsigned instr = ptrace(PTRACE_PEEKTEXT, child_pid, regs.rip, 0);  //PTRACE_PEEKTEXT is used to get the value stored in the actual PC.
+
+		printf("[%u.]  PC = 0x%08x.  instr = 0x%08x\n", icounter, regs.rip, instr);  
+
+		//If -s switch was added in the command line, the program will wait the ENTER key to continue the program execution
 		if(_step_mode){
-			procmsg("Press ENTER key to continue ...");
+			printf("Press ENTER key to continue...\n");
 			while(getchar()!='\n');
 			
 		}
 	
+		//In case a variable is being monitored, PTRACE_PEEKDATA allowed to check if a data value is modified
+		//In this case the program will notify the change
+		
 		if(_check_var){
 			new_val = ptrace(PTRACE_PEEKDATA, child_pid, _glob_var, NULL);
 			if(old_val != new_val){
 				printf("Variable 0x%16x changed its value...\n",_glob_var);
-				procmsg("Old value was %16x\n", old_val);
-				procmsg("New value is %16x\n", new_val);
+				printf("Old value was %16x\n", old_val);
+				printf("New value is %16x\n", new_val);
+
 				old_val = new_val;
 			}
 		}
@@ -314,7 +362,48 @@ void run_debugger(pid_t child_pid, int _step_mode, int _check_var, int _glob_var
 		wait(&wait_status);
 	}
 
-//	procmsg("the child executed %u instructions\n", icounter);
+	printf("The program executed %u instructions\n", icounter);
+	printf("Program execution finished...\n");
 
+
+}
+
+//This method will print the autors information
+void print_autor(){
+	printf("#############################################\n");
+	printf("#               Dbugger tool                #\n");
+	printf("#############################################\n");
+	printf("# Autores: Marco Espinoza Murillo           #\n");
+	printf("#          Jose Campos Murillo              #\n");
+	printf("#	   Freddy Zeledon Jarquin           #\n");
+	printf("# Maestria Sistemas Embebidos               #\n");
+	printf("# Instituo Tecnologico de Costa Rica        #\n");
+	printf("#############################################\n");
+	exit(0);
+}
+
+
+//This method will print the help menu
+
+void print_help(){
+	printf("##############################################################\n");
+	printf("#                    Dbugger tool                            #\n");
+	printf("##############################################################\n");
+	printf("# Argumentos validos:                                        #\n");
+	printf("#   -a: Muestra la informacion de los autores del programa   #\n");
+	printf("#   -h: Muestra este menu de ayuda                           #\n");
+	printf("#   -b: Recibe el binario del programa a ejecutar            #\n");
+	printf("#   -s: Ejecuta el programa paso a paso                      #\n");
+	printf("#   -w: Recibe el nombre de una variable global del programa #\n");
+	printf("#       para monitorear los cambios de la misma durante la   #\n");
+	printf("#       ejecucion del debugger.                              #\n");
+	printf("# Ejemplo de lineas de comando:                              #\n");
+	printf("   ./dbugger -b main                                         #\n");
+	printf("   ./dbugger -b main -w dummy                                #\n");
+	printf("   ./dbugger -b main -w dummy -s                             #\n");
+	printf("   ./dbugger -b test1 -w value                               #\n");
+	printf("##############################################################\n");
+	exit(0);
+	
 }
 
