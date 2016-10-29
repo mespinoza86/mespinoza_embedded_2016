@@ -1,0 +1,22 @@
+Memcheck tool
+
+Description: 
+Memcheck tool is a debugger tool to check for memory leaks
+
+Compilation:
+	1. Run autoreconf -iv
+	2. Run ./configure
+	3. Run Make
+
+	The binary is stored under src/
+	The libmemcheck.so is stored under lib/.libs/
+
+Execution
+memcheck must be executed from src/
+	Usage: ./memcheck [OPTIONS]
+		Where OPTIONS are:
+	
+		-a displays the information of the author of the program
+		-h displays the usage message to let the user know how to execute the application.
+		-p PROGRAM specifies the path to the program binary that will be analyzed, for example:
+			./memcheck -p /home/myuser/buggy
