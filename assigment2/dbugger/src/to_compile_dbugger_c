@@ -1,1 +1,0 @@
-gcc -o dbugger dbugger.c -Wall -pedantic --std=c99
