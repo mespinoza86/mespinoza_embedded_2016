@@ -1,0 +1,9 @@
+Valgrind report:
+86 allocs and 61 frees
+It means there are 25 memory leaks in this buggy execution.
+
+And the leak summary report:
+There are 16 bytes belonging to 1 block which is a definitely lost.
+and There are 384 bytes belonging to the rest of 24 blobks and there are indirectly lost.
+
+
