@@ -14,10 +14,23 @@
 #include <getopt.h>
 #include <string.h>
 
+//Global Variables
+
+struct  file_read {
+	int index;
+	char addr[400];
+	struct file_read *next;
+};  
+
+struct file_read *_fp;
+
 //Declaring methods which will be used during the program execution
 void run_target(const char* programname);
 void run_debugger(pid_t child_pid, int _step_mode, int _check_var, int _glob_var);
 void procmsg(const char* format, ...);
+void run_nm(const char* programname);
+void read_var (const char* global_var_read);
+unsigned int check_var_addr(char* s_var_addr);
 
 //Main method
 //This is the method in charge to execute the program
@@ -61,7 +74,7 @@ and set the proper variables in order to execute the required methods
 			case 'w':
 			//'w' has the address which will be monitored during the test execution
 				s_var_addr = optarg;
-				sscanf(s_var_addr,"%08x",&var_addr);
+			//	sscanf(s_var_addr,"%08x",&var_addr);
 				check_var=1;
 				break;
 			case 's':
@@ -96,6 +109,15 @@ and set the proper variables in order to execute the required methods
 		fprintf(stderr, "-Info- Program %s will be executed with the debugger\n", program);
 	}
 
+
+	/*
+	The following fork is used to execute the binary file through the debugger
+	*/
+//	run_nm(program);
+
+	pid_t child_pid, nm_pid;
+	int status;
+
 	/*
 	-w argument is optional, it will have the address for the global var which will be 
 	monitored during the binary execution.
@@ -103,25 +125,31 @@ and set the proper variables in order to execute the required methods
 	*/
 
 	if(check_var){
-		printf("-Info- Address to monitor during execution is: 0x%08x\n", var_addr);
+		nm_pid = fork();
+		if(nm_pid == 0){
+			run_nm(program);
+		}else{
+			//With this if we are pretty sure the process related with nm is already finished
+			if (waitpid (nm_pid, &status, 0) == nm_pid){	
+				read_var("temp_var");
+				var_addr = check_var_addr(s_var_addr);
+				printf("-Info- Address to monitor during execution is: 0x%08x\n", var_addr);
+			}
+
+		}
 	}else{
 		printf("-Info- Warning... No global variable will be monitored\n");
-	}	
-
-	/*
-	The following fork is used to execute the binary file through the debugger
-	*/
-	pid_t child_pid;
+	}
 
 	child_pid = fork();
-	if (child_pid == 0)
+	if (child_pid == 0){
 		/*
 		run_target method is used to execute the binary file
 		but using PTRACE_TRACEME, it will tell the kernel 
 		the process is being traced		
 		*/
 		run_target(program);
-	else if (child_pid > 0)
+	}else if (child_pid > 0){
 		/*
 		When the process finish the execution, the method run_debugger is executed
 		to get all the information required for our program
@@ -129,11 +157,10 @@ and set the proper variables in order to execute the required methods
 		and if the program will be executed by steps.
 		*/
 		run_debugger(child_pid, step_mode,check_var, var_addr);
-	else {
+	}else {
 		perror("fork");
 		return -1;
 	}
-
 	return 0;
 }
 
@@ -153,20 +180,89 @@ void procmsg(const char* format, ...)
     va_end(ap);
 }
 
+void read_var (const char* global_var_read){
+	FILE *fp;
+	int cont=0;
+ 	
+	struct file_read *aux;	
 
+	_fp = malloc( sizeof(struct file_read) );  
+	aux = _fp;
+ 
+	fp = fopen("temp_var","r");
+
+	while (fscanf(fp, "%s",aux->addr) != EOF) {
+		aux->index=cont;
+//		printf("Data read addr %s\n", aux->addr);
+		aux->next = malloc( sizeof(struct file_read) ); 
+		aux = aux->next;
+		memset(aux->addr, 0, sizeof(aux->addr));
+		cont++;
+	}
+}
+
+unsigned int check_var_addr(char* s_var_addr){
+	struct file_read *aux;	
+	aux = _fp;
+	char* str_in_prog;
+	int id = -1;
+	unsigned int _value;
+
+	while(aux->next != NULL){
+		str_in_prog = aux->addr;
+		if(strcmp(str_in_prog, s_var_addr) == 0){
+			id = aux->index - 2;
+		}
+		aux = aux->next;
+	}
+
+	if(id != -1){	
+		aux = _fp;
+		while(aux->next != NULL){
+			if(id == aux->index){
+				str_in_prog = aux->addr;
+				sscanf(str_in_prog,"%16x",&_value);
+			}
+			aux = aux->next;
+		}
+	}else{
+		printf("-Error- The variable added is not in the program\n\n");
+		printf("Exiting...");
+		exit(0);
+	}
+	
+	printf("-I- The variable %s is matching the address %16x\n",s_var_addr, _value);
+	return _value; 
+	
+}
+
+void run_nm(const char* programname){
+	char* nm_lit = "nm ";
+	char* nm_exec;
+
+	nm_exec = malloc(strlen(nm_lit)+1+4);	
+	strcpy(nm_exec, nm_lit);
+	strcat(nm_exec, programname);
+	strcat(nm_exec, " > temp_var");
+
+	procmsg("Executing nm script....\n", programname);
+
+	execl("/bin/sh", "/bin/sh","-c",nm_exec,0);
+
+	
+}
 
 void run_target(const char* programname)
 {
-    procmsg("target started. will run '%s'\n", programname);
 
-    // Allow tracing of this process /
-    if (ptrace(PTRACE_TRACEME, 0, 0, 0) < 0) {
-        perror("ptrace");
-        return;
-    }
+	// Allow tracing of this process /
+	if (ptrace(PTRACE_TRACEME, 0, 0, 0) < 0) {
+		perror("ptrace");
+		return;
+	}
 
-    // Replace this process's image with the given program 
-    execl(programname, programname, 0);
+	// Replace this process's image with the given program 
+	execl(programname, programname, 0);
 }
 
 
@@ -201,9 +297,9 @@ void run_debugger(pid_t child_pid, int _step_mode, int _check_var, int _glob_var
 		if(_check_var){
 			new_val = ptrace(PTRACE_PEEKDATA, child_pid, _glob_var, NULL);
 			if(old_val != new_val){
-				printf("Variable 0x%08x changed its value...\n",_glob_var);
-				procmsg("Old value was %08x\n", old_val);
-				procmsg("New value is %08x\n", new_val);
+				printf("Variable 0x%16x changed its value...\n",_glob_var);
+				procmsg("Old value was %16x\n", old_val);
+				procmsg("New value is %16x\n", new_val);
 				old_val = new_val;
 			}
 		}
