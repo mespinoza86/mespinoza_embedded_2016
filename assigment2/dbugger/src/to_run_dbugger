@@ -1,0 +1,2 @@
+./dbugger -b test1 -w 0x601044  > log_exec.txt
+grep "value" log_exec.txt > var_changes.txt
