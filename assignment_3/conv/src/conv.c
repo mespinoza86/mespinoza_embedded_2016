@@ -8,9 +8,11 @@
 #define STB_DEFINE
 #include "stb.h"
 
+#include <string.h>
+
 //#define PNGSUITE_PRIMARY
 
-void calc_convolution (char *srcfile, char *outfile, int _kernel);
+void run_kernel (char *srcfile, char *outfile, int _kernel);
 void kernel_left_sobel (uint8 *_proc_image, int h, int row, int w, int col, int depth, int z, uint8 c_image[h][w][depth]);
 void kernel_identity (uint8 *_proc_image, int h, int row, int w, int col, int depth, int z, uint8 c_image[h][w][depth]);
 void kernel_outline (uint8 *_proc_image, int h, int row, int w, int col, int depth, int z, uint8 c_image[h][w][depth]);
@@ -99,26 +101,30 @@ and set the proper variables in order to execute the required methods
 		fprintf(stderr, "-Info- Convolution program will apply the kernel number %i to the src image\n", kernel);
 	}
 
-	calc_convolution(src_image, out_image, kernel);
+	run_kernel(src_image, out_image, kernel);
 
 	return 0;
 
 }
 
-void calc_convolution (char *srcfile, char *outfile, int _kernel){
+void run_kernel (char *srcfile, char *outfile, int _kernel){
 
 	uint8 *org_image, *result;
 	int *x; int *y; int req_comp;
 	int w,h, depth;
 	org_image = stbi_load(srcfile, &w, &h, &depth, req_comp);
 	result = stbi_load(srcfile, &w, &h, &depth, req_comp);
-	
-	uint8 c_image[h][w][3];
 
+	uint8 temp_c_image[h][w][3];
+	
 	printf("------- Image Information -----------\n");
 	printf("-I- Src Image width     %i\n", w);	
 	printf("-I- Src Image height    %i\n", h);	
 	printf("-I- Src Image depth     %i\n", depth);		
+
+	uint8 c_image[h][w][depth];
+
+#pragma omp parallel for
 
 	for (int row = 0; row < h; row++) {
 		for (int col = 0; col < w; col++) {
@@ -128,6 +134,8 @@ void calc_convolution (char *srcfile, char *outfile, int _kernel){
 			}
 		}
 	}
+
+#pragma omp parallel for
 
 	for (int row = 0; row < h; row++) {
 		for (int col = 0; col < w; col++) {
@@ -165,9 +173,34 @@ void calc_convolution (char *srcfile, char *outfile, int _kernel){
 		}
 	}
 	
-//	stbi_write_png("algo.png",w,h,comp,pixels, w);
-//	stbi_write_bmp("algo.bmp",w,h,depth,org_image);
-	stbi_write_bmp(outfile,w,h,depth,result);
+	if (strstr(srcfile,".bmp")){
+		printf("-Info- Storing the image as bmp\n");
+		stbi_write_bmp(outfile,w,h,depth,result);
+		printf("-Info- Image was stored as %s\n", outfile); 
+	}else if(strstr(srcfile,".png") != NULL){
+		printf("-Info- Storing the image as png\n");
+		stbi_write_png(outfile,w,h,depth,result, w*3);
+		printf("-Info- Image was stored as %s\n", outfile);
+	}else if(strstr(srcfile,".tga") != NULL){
+		printf("-Info- Storing the image as tga\n");
+     		stbi_write_tga(outfile,w,h,depth,result);
+		printf("-Info- Image was stored as %s\n", outfile);
+/*	}else if(strstr(srcfile,".hdr") != NULL){
+		printf("-Info- Storing the image as hdr\n");
+     		stbi_write_hdr(outfile,w,h,depth,result); 
+		printf("-Info- Image was stored as %s\n", outfile);
+	}*/
+	}else if(strstr(srcfile,".jpg") != NULL){
+		printf("-Warning- Input file has jpg format but it will be stored as bmp\n");
+		stbi_write_bmp(outfile,w,h,depth,result);
+		printf("-Info- Image was stored as %s\n", outfile); 
+
+	}else{
+		printf("-Error- The image format added is not supported by the program\n-Error- Exiting ....\n");
+		exit(0);
+	}
+
+	
 }
 
 void kernel_left_sobel (uint8 *_proc_image, int h, int row, int w, int col, int depth, int z, uint8 c_image[h][w][depth]){
