@@ -1,3 +1,4 @@
-bin_PROGRAMS = conv 
-dbugger_SOURCES = conv.c
-dbugger_CFLAGS = -Wall -pedantic -lm -fopenmp -pg --std=c99
+bin_PROGRAMS = conv
+conv_SOURCES = conv.c
+conv_CFLAGS = -lm  --std=gnu99 -fopenmp -pg
+

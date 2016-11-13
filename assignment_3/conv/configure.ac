@@ -14,7 +14,7 @@ AC_PROG_CPP
 # Checks for libraries.
 
 # Checks for header files.
-AC_CHECK_HEADERS([stdlib.h string.h unistd.h stb.h stb_image.h stb_image_write.h])
+AC_CHECK_HEADERS([stdlib.h string.h unistd.h math.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_PID_T
@@ -22,7 +22,8 @@ AC_TYPE_PID_T
 # Checks for library functions.
 AC_FUNC_FORK
 AC_FUNC_MALLOC
-AC_CHECK_FUNCS([memset])
+AC_CHECK_FUNCS([conv])
+AC_SEARCH_LIBS([pow], [m])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile])
