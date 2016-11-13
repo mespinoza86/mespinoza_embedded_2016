@@ -43,7 +43,7 @@
  */
 
 /**
- * @brief calc_convolution is used to perform the selected kernel operation
+ * @brief run_kernel is used to perform the selected kernel operation
  * @param srcfile Source image
  * @param outfile Output image
  * @param _kernel Integer value with the kernel chosen:
@@ -54,7 +54,7 @@
  *					5. kernel_sharpen
  *					6. kernel_topsobel
  */
-void calc_convolution (char *srcfile, char *outfile, int _kernel);
+void run_kernel (char *srcfile, char *outfile, int _kernel);
 
 /**
  * @brief Kernel_left_sobel is used to perform the left_sobel kernel operation in the input image, 

@@ -33,7 +33,7 @@ int main(int argc, char **argv)
 	int kernel = -1;
 
 //This while is used to read the arguments added to through the command line to the application
-	while ((c = getopt (argc, argv, "ha:i:o:k:")) != -1){
+	while ((c = getopt (argc, argv, "i:o:k:ha")) != -1){
 /*
 The following switch will identify the arguments read, and it will call the proper method
 and set the proper variables in order to execute the required methods
