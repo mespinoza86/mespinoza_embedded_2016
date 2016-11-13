@@ -11,22 +11,24 @@ Compilation:
 	The binary is stored under src/
 
 Execution
-dbugger must be executed from src/
-	Usage: ./dbugger [OPTIONS]
+conv must be executed from src/
+	Usage: ./conv [OPTIONS]
 		Where OPTIONS are:
-	   -a: displays the information of the authors of the program   
-	   -h: displays the usage message to let the user know how to execute the application.                        
-	   -b: It is the path for the binary file to be executed          
-	   -s: Execute the program step by step. [OPTIONAL]                      
-	   -w: It is receive a global variable name to check the changes belonging to this variable
-		during the program execution. 
-
+ 		    -a: It shows the program autor information                                     \n");
+	   -h: It shows this help menu                                                    
+	   -i: It receive the source image to apply the kernel                            
+	   -k: It is the kernel to apply to the image, one of the follows can be applied: 
+	            1: kernel_left_sobel                                                  
+	            2: kernel_identity                                                    
+	            3: kernel_outline                                                     
+	            4: kernel_blur                                                        
+	            5: kernel_sharpen                                                     
+	            6: kernel_topsobel                                                    
+	   -o: It receive the name for the output image with the kernel applied           
+	                                                                                  
 Command line examples:
-	In the src folder there are two binary files which can be used to validate the program. they are:
-		-main  -> It has the dummy variable as global var
-		-test1 -> It has hola, reg and value as global variables. 
-
-        ./dbugger -b main                                        
-	./dbugger -b main -w dummy                             
-	./dbugger -b main -w dummy -s                           
-	./dbugger -b test1 -w value                           
+	In the src folder there are different images which can be used to validate the program. 
+	  ./conv -i foto1.jpg   -o result.bmp -k 5                                       
+	  ./conv -i foto2.jpg   -o result.bmp -k 2                                        
+	  ./conv -i foto3.bmp   -o result.bmp -k 6                                       
+	  ./conv -i lena512.bmp -o result.bmp -k 3           
