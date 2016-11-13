@@ -20,6 +20,9 @@ void kernel_outline (uint8 *_proc_image, int h, int row, int w, int col, int dep
 void kernel_blur (uint8 *_proc_image, int h, int row, int w, int col, int depth, int z, uint8 c_image[h][w][depth]);
 void kernel_sharpen (uint8 *_proc_image, int h, int row, int w, int col, int depth, int z, uint8 c_image[h][w][depth]);
 void kernel_topsobel (uint8 *_proc_image, int h, int row, int w, int col, int depth, int z, uint8 c_image[h][w][depth]);
+void print_autor();
+void print_help();
+
 
 int main(int argc, char **argv)
 {
@@ -39,7 +42,7 @@ and set the proper variables in order to execute the required methods
 		switch (c) {
 			case 'a':
 			//'a' means the autor information will be printed
-			//	print_autor();
+				print_autor();
 				break;
 			case 'i':
 			//'b' It will have the path for the binary file to be executed
@@ -47,7 +50,7 @@ and set the proper variables in order to execute the required methods
 				break;			
 			case 'h':
 			//'h' is used to print the help menu
-			//	print_help();
+				print_help();
 				break;
 			case 'o':
 			//'w' has the address which will be monitored during the test execution
@@ -82,21 +85,21 @@ and set the proper variables in order to execute the required methods
 	*/
 
 	if(src_image==NULL){
-		fprintf(stderr, "-Error- Argument -i <source_image> is required\n");
+		fprintf(stderr, "-Error- Argument -i <source_image> is required\n-Error- Use -h to see the help menu\n");
 		exit(0);
 	}else{
 		fprintf(stderr, "-Info- Convolution program will use the image %s as the source image\n", src_image);
 	}
 
 	if(out_image==NULL){
-		fprintf(stderr, "-Error- Argument -o <output_image> is required\n");
+		fprintf(stderr, "-Error- Argument -o <output_image> is required\n-Error- Use -h to see the help menu\n");
 		exit(0);
 	}else{
 		fprintf(stderr, "-Info- Convolution program will store the image resultant in the file %s\n", out_image);
 	}
 
 	if(kernel==-1){
-		fprintf(stderr, "-Error- Argument -k <kernel desired> is required\n");
+		fprintf(stderr, "-Error- Argument -k <kernel desired> is required\n-Error- Use -h to see the help menu\n");
 		exit(0);
 	}else{
 		fprintf(stderr, "-Info- Convolution program will apply the kernel number %i to the src image\n", kernel);
@@ -186,18 +189,13 @@ void run_kernel (char *srcfile, char *outfile, int _kernel){
 		printf("-Info- Storing the image as tga\n");
      		stbi_write_tga(outfile,w,h,depth,result);
 		printf("-Info- Image was stored as %s\n", outfile);
-/*	}else if(strstr(srcfile,".hdr") != NULL){
-		printf("-Info- Storing the image as hdr\n");
-     		stbi_write_hdr(outfile,w,h,depth,result); 
-		printf("-Info- Image was stored as %s\n", outfile);
-	}*/
 	}else if(strstr(srcfile,".jpg") != NULL){
 		printf("-Warning- Input file has jpg format but it will be stored as bmp\n");
 		stbi_write_bmp(outfile,w,h,depth,result);
 		printf("-Info- Image was stored as %s\n", outfile); 
 
 	}else{
-		printf("-Error- The image format added is not supported by the program\n-Error- Exiting ....\n");
+		printf("-Error-The image format added is not supported by the program\n-Error- Format compatible are: jpg/png/bmp/tga\n-Error- Exiting ....\n");
 		exit(0);
 	}
 
@@ -246,5 +244,49 @@ void kernel_topsobel (uint8 *_proc_image, int h, int row, int w, int col, int de
 						c_image[row-1][col-1][z]*1 + c_image[row-1][col][z]*2 + c_image[row-1][col+1][z]*1 + 
 						c_image[row]  [col-1][z]*0 + c_image[row]  [col][z]*0  + c_image[row]  [col+1][z]*0 + 
 						c_image[row+1][col-1][z]*-1 + c_image[row+1][col][z]*-2 + c_image[row+1][col+1][z]*-1);
+}
+
+//This method will print the autors information
+void print_autor(){
+	printf("#############################################\n");
+	printf("#           Convolution tool                #\n");
+	printf("#############################################\n");
+	printf("# Autores: Marco Espinoza Murillo           #\n");
+	printf("#          Jose Campos Murillo              #\n");
+	printf("#	   Freddy Zeledon Jarquin           #\n");
+	printf("# Maestria Sistemas Embebidos               #\n");
+	printf("# Instituo Tecnologico de Costa Rica        #\n");
+	printf("#############################################\n");
+	exit(0);
+}
+
+
+//This method will print the help menu
+
+void print_help(){
+	printf("####################################################################################\n");
+	printf("#                               Convolution tool                                   #\n");
+	printf("####################################################################################\n");
+	printf("# Valid arguments:                                                                 #\n");
+	printf("#   -a: It shows the program autor information                                     #\n");
+	printf("#   -h: It shows this help menu                                                    #\n");
+	printf("#   -i: It receive the source image to apply the kernel                            #\n");
+	printf("#   -k: It is the kernel to apply to the image, one of the follows can be applied: #\n");
+	printf("#            1: kernel_left_sobel                                                  #\n");
+	printf("#            2: kernel_identity                                                    #\n");
+	printf("#            3: kernel_outline                                                     #\n");
+	printf("#            4: kernel_blur                                                        #\n");
+	printf("#            5: kernel_sharpen                                                     #\n");
+	printf("#            6: kernel_topsobel                                                    #\n");
+	printf("#   -o: It receive the name for the output image with the kernel applied           #\n");
+	printf("#                                                                                  #\n");
+	printf("# Command line examples                                                            #\n");
+	printf("#  ./conv -i foto1.jpg   -o result.bmp -k 5                                        #\n");
+	printf("#  ./conv -i foto2.jpg   -o result.bmp -k 2                                        #\n");
+	printf("#  ./conv -i foto3.bmp   -o result.bmp -k 6                                        #\n");
+	printf("#  ./conv -i lena512.bmp -o result.bmp -k 3                                        #\n");
+	printf("####################################################################################\n");
+	exit(0);
+	
 }
 
