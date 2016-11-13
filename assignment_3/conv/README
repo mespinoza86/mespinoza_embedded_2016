@@ -1,7 +1,7 @@
-Memcheck tool
+Convolution tool
 
 Description: 
-Memcheck tool is a debugger tool to check for memory leaks
+Convolution tool is used to apply different kernels to an image. 
 
 Compilation:
 	1. Run autoreconf -iv
