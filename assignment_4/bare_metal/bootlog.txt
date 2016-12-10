@@ -1,0 +1,60 @@
+
+U-Boot 2010.03 (dic 09 2016 - 00:55:54)
+
+DRAM:   0 kB
+Flash: 64 MB
+*** Warning - bad CRC, using default environment
+
+In:    serial
+Out:   serial
+Err:   serial
+Net:   SMC91111-0
+VersatilePB # bootm 0x253A4
+## Booting kernel from Legacy Image at 000253a4 ...
+   Image Name:   
+   Image Type:   ARM Linux Kernel Image (uncompressed)
+   Data Size:    1776 Bytes =  1.7 kB
+   Load Address: 00100000
+   Entry Point:  00100000
+   Loading Kernel Image ... OK
+OK
+
+Starting kernel ...
+
+
+Type the first operand
+78
+
+Type the operation (* +)
++
+
+
+Type the second operand
+5
+Result = 83
+
+Type the first operand
+12
+
+Type the operation (* +)
+*
+
+
+Type the second operand
+10
+Result = 120
+
+Type the first operand
+90
+
+Type the operation (* +)
+*
+
+
+Type the second operand
+90
+Result = 8100
+
+Type the first operand
+QEMU: Terminated
+
