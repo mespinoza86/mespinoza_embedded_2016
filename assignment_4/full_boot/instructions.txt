@@ -1,0 +1,138 @@
+SECTION I: Initial setup
+
+	1. Install qemu-system-arm
+		sudo apt-get install qemu-system-arm
+
+	2. Install u-boot utilities
+		sudo apt-get install u-boot-tools  
+
+	3. Install libncurses
+		sudo apt-get install libncurses5-dev
+
+
+SECTION II: Linaro Toolchain installation
+ 
+	1. Download source code:
+		wget https://launchpad.net/linaro-toolchain-binaries/trunk/2012.03/+download/gcc-linaro-arm-linux-gnueabi-2012.03-20120326_linux.tar.bz2
+
+	2. Decompress the tarball
+		tar xvjf  gcc-linaro-arm-linux-gnueabi-2012.03-20120326_linux.tar.bz2
+
+	3. Modify env variable $PATH to include the downloaded binaries
+		Example:
+			PATH=$PATH:~/TEC/gcc-linaro-arm-linux-gnueabi-2012.03-20120326_linux:~/TEC/gcc-linaro-arm-linux-gnueabi-2012.03-20120326_linux/bin/
+
+
+SECTION III: Kernel Image creation
+	
+	1. Download source code:
+		wget https://www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.39.tar.bz2
+
+	2. Decompress the tarball
+		tar xvjf linux-2.6.39.tar.bz2
+
+	3. cd linux-2.6.39
+		
+	4. Initial setup for tthe target:
+		make ARCH=arm versatile_defconfig
+
+	5. Open menuconfig and select:
+		make ARCH=arm menuconfig
+		Select Kernel Features -> "Use the ARM EABI to compile the kernel"
+		save changes and exit
+
+	6. Generate the kernel:
+		make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- all
+
+	7. zImage is created in arch/arm/boot/zImage 
+
+SECTION IV: Filesystem creation
+	1. Download busybox:
+		wget http://busybox.net/downloads/busybox-1.16.0.tar.bz2
+
+	2. Decompress the tarball
+		tar xvjf busybox-1.16.0.tar.bz2
+
+	3. cd busybox-1.16.0
+
+	4. Initial configuration:
+		make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- defconfig
+
+	5. Open menuconfig:
+		make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- menuconfig
+		Select:
+			“Busybox Settings --> Build Options -> Select  compile Busybox as a static executable
+		Save changes and exit
+
+	6. Generate the Filesystem:
+		make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- install
+
+	7. cd _install
+
+	8. mkdir proc sys dev etc etc/init.d
+
+	9. Create this file: etc/init.d/rcS with this content:
+        #!/bin/sh
+        mount -t proc none /proc
+        mount -t sysfs none /sys
+        /sbin/mdev -s
+
+	10. chmod +x etc/init.d/rcS
+	
+	11. find . | cpio -o --format=newc > ../rootfs.img
+
+	12. cd ..
+
+	13. gzip -c rootfs.img > rootfs.img.gz
+
+	14. rootfs.img.gz is the file system image
+
+SECTION V: Creating uboot
+
+	1. Download source code:
+		wget ftp://ftp.denx.de/pub/u-boot/u-boot-2010.03.tar.bz2	
+
+	2. Decompress the tarball
+		tar xvjf u-boot-2010.03.tar.bz2
+
+	3. cd u-boot-2010.03
+		
+	4. Modify line 941 of common/image.c
+		Original: if defined(CONFIG_B2) || defined(CONFIG_EVB4510) || defined(CONFIG_ARMADILLO)
+		Modified: if defined(CONFIG_B2) || defined(CONFIG_EVB4510) || defined(CONFIG_ARMADILLO) || defined(CONFIG_VERSATILE)
+
+	5. Modify from line 124 to 126 of include/configs/versatile.h 
+		Original:
+#define CONFIG_BOOTARGS        "root=/dev/nfs mem=128M ip=dhcp "\
+"netdev=25,0,0xf1010000,0xf1010010,eth0"		
+	
+		Modified:
+#define CONFIG_BOOTARGS        "root=/dev/ram mem=128M rdinit=/sbin/init"
+#define CONFIG_BOOTCOMMAND   "bootm 0x210000 0x410000"
+#define CONFIG_INITRD_TAG   1
+
+	6. make CROSS_COMPILE=arm-none-eabi- versatilepb_config
+	
+	7. make CROSS_COMPILE=arm-none-eabi- all
+
+	8. u-boot.bin should have been created
+
+SECTION VI: Generating the flash image
+
+	1. Take the zImage, rootfs.img.gz and u-boot.bin and place them in the same directory
+
+	2 .mkimage -A arm -C none -O linux -T kernel -d zImage -a 0x00010000 -e 0x00010000 zImage.uimg
+
+    3. mkimage -A arm -C none -O linux -T ramdisk -d rootfs.img.gz -a 0x00800000 -e 0x00800000 rootfs.uimg
+
+	4. dd if=/dev/zero of=flash.bin bs=1 count=6M
+    5. dd if=u-boot.bin of=flash.bin conv=notrunc bs=1
+    6. dd if=zImage.uimg of=flash.bin conv=notrunc bs=1 seek=2M
+    7. dd if=rootfs.uimg of=flash.bin conv=notrunc bs=1 seek=4M
+
+	8. At this point, flash.bin has all the required contents
+
+SECTION VII: Emulate the flash
+	
+	1. qemu-system-arm -M versatilepb -m 128M -kernel flash.bin -serial stdio
+
