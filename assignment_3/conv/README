@@ -1,0 +1,34 @@
+Convolution tool
+
+Description: 
+Convolution tool is used to apply different kernels to an image. 
+
+Compilation:
+	1. Run autoreconf -iv
+	2. Run ./configure
+	3. Run Make
+
+	The binary is stored under src/
+
+Execution
+conv must be executed from src/
+	Usage: ./conv [OPTIONS]
+		Where OPTIONS are:
+ 		    -a: It shows the program autor information                                     \n");
+	   -h: It shows this help menu                                                    
+	   -i: It receive the source image to apply the kernel                            
+	   -k: It is the kernel to apply to the image, one of the follows can be applied: 
+	            1: kernel_left_sobel                                                  
+	            2: kernel_identity                                                    
+	            3: kernel_outline                                                     
+	            4: kernel_blur                                                        
+	            5: kernel_sharpen                                                     
+	            6: kernel_topsobel                                                    
+	   -o: It receive the name for the output image with the kernel applied           
+	                                                                                  
+Command line examples:
+	In the src folder there are different images which can be used to validate the program. 
+	  ./conv -i foto1.jpg   -o result.bmp -k 5                                       
+	  ./conv -i foto2.jpg   -o result.bmp -k 2                                        
+	  ./conv -i foto3.bmp   -o result.bmp -k 6                                       
+	  ./conv -i lena512.bmp -o result.bmp -k 3           
