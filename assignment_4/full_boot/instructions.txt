@@ -48,12 +48,12 @@ SECTION III: Kernel Image creation
 
 SECTION IV: Filesystem creation
 	1. Download busybox:
-		wget http://busybox.net/downloads/busybox-1.16.0.tar.bz2
+		wget http://busybox.net/downloads/busybox-1.21.0.tar.bz2
 
 	2. Decompress the tarball
-		tar xvjf busybox-1.16.0.tar.bz2
+		tar xvjf busybox-1.21.0.tar.bz2
 
-	3. cd busybox-1.16.0
+	3. cd busybox-1.21.0
 
 	4. Initial configuration:
 		make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- defconfig
