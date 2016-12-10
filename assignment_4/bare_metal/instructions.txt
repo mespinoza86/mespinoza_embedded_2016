@@ -1,0 +1,30 @@
+I. Set the toolchain
+
+Short form:
+Run ./generate_images.sh
+Run ./execute
+
+Long form:
+
+
+II. Compile the app.uimg
+
+arm-linux-gnueabi-as -mcpu=arm926ej-s -g startup.s -o startup.o
+arm-linux-gnueabi-gcc -c -mcpu=arm926ej-s app.c -o app.o
+arm-linux-gnueabi-ld -T app.ld -Map=test.map app.o startup.o -o app.elf
+arm-linux-gnueabi-objcopy -O binary app.elf app.bin
+mkimage -A arm -C none -O linux -T kernel -d app.bin -a 0x00100000 -e 0x00100000 app.uimg
+
+
+III. Create the flash.boin:
+	cat u-boot.bin app.uimg > flash.bin
+
+IV. Get the boot address
+	printf "bootm 0x%X\n" $(expr $(stat -c%s u-boot.bin) + 65536)
+
+V. Run
+qemu-system-arm -M versatilepb -m 128M -nographic -kernel flash.bin
+
+Use the bootm command from IV to start the execution
+
+	

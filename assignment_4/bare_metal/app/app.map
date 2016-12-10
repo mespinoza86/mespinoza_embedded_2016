@@ -1,0 +1,105 @@
+
+Allocating common symbols
+Common symbol       size              file
+
+buffer              0x19              app.o
+received_string     0x19              app.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x0000000000000000 0xffffffffffffffff
+
+Linker script and memory map
+
+                0x0000000000100000                . = 0x100000
+
+.startup        0x0000000000100000       0x10
+ startup.o(.text)
+ .text          0x0000000000100000       0x10 startup.o
+                0x0000000000100000                _Reset
+
+.text           0x0000000000100010      0x5e8
+ *(.text)
+ .text          0x0000000000100010      0x5e8 app.o
+                0x0000000000100010                my_itoa
+                0x00000000001001f8                my_atoi
+                0x0000000000100288                print_uart0
+                0x00000000001003cc                clear_array
+                0x0000000000100428                process_operand
+                0x00000000001004a8                c_entry
+
+.rodata         0x00000000001005f8       0xf8
+ .rodata        0x00000000001005f8       0xf8 app.o
+                0x00000000001005f8                UART0
+
+.glue_7         0x00000000001006f0        0x0
+ .glue_7        0x0000000000000000        0x0 linker stubs
+
+.glue_7t        0x00000000001006f0        0x0
+ .glue_7t       0x0000000000000000        0x0 linker stubs
+
+.vfp11_veneer   0x00000000001006f0        0x0
+ .vfp11_veneer  0x0000000000000000        0x0 linker stubs
+
+.v4_bx          0x00000000001006f0        0x0
+ .v4_bx         0x0000000000000000        0x0 linker stubs
+
+.iplt           0x00000000001006f0        0x0
+ .iplt          0x0000000000000000        0x0 startup.o
+
+.rel.dyn        0x00000000001006f0        0x0
+ .rel.iplt      0x0000000000000000        0x0 startup.o
+
+.data           0x00000000001006f0        0x0
+ *(.data)
+ .data          0x00000000001006f0        0x0 startup.o
+ .data          0x00000000001006f0        0x0 app.o
+
+.igot.plt       0x00000000001006f0        0x0
+ .igot.plt      0x0000000000000000        0x0 startup.o
+
+.bss            0x00000000001006f0       0x3d
+ *(.bss COMMON)
+ .bss           0x00000000001006f0        0x0 startup.o
+ .bss           0x00000000001006f0        0x8 app.o
+                0x00000000001006f0                count
+                0x00000000001006f4                done_receiving_parameter
+ COMMON         0x00000000001006f8       0x35 app.o
+                0x00000000001006f8                buffer
+                0x0000000000100714                received_string
+                0x0000000000100730                . = ALIGN (0x8)
+                0x0000000000101730                . = (. + 0x1000)
+                0x0000000000101730                stack_top = .
+LOAD app.o
+LOAD startup.o
+OUTPUT(app.elf elf32-littlearm)
+
+.ARM.attributes
+                0x0000000000000000       0x2e
+ .ARM.attributes
+                0x0000000000000000       0x22 startup.o
+ .ARM.attributes
+                0x0000000000000022       0x32 app.o
+
+.comment        0x0000000000000000       0x2b
+ .comment       0x0000000000000000       0x2b app.o
+                                         0x2c (size before relaxing)
+
+.note.GNU-stack
+                0x0000000000000000        0x0
+ .note.GNU-stack
+                0x0000000000000000        0x0 app.o
+
+.debug_line     0x0000000000000000       0x3a
+ .debug_line    0x0000000000000000       0x3a startup.o
+
+.debug_info     0x0000000000000000       0x96
+ .debug_info    0x0000000000000000       0x96 startup.o
+
+.debug_abbrev   0x0000000000000000       0x14
+ .debug_abbrev  0x0000000000000000       0x14 startup.o
+
+.debug_aranges  0x0000000000000000       0x20
+ .debug_aranges
+                0x0000000000000000       0x20 startup.o
